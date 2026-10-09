@@ -25,6 +25,7 @@ import AdminInventory from "@/pages/admin/AdminInventory";
 import AdminPurchases from "@/pages/admin/AdminPurchases";
 import AdminNotifications from "@/pages/admin/AdminNotifications";
 import AdminContent from "@/pages/admin/AdminContent";
+import AdminAccount from "@/pages/admin/AdminAccount";
 import AnnouncementBar from "@/components/AnnouncementBar";
 import { ContentProvider } from "@/context/ContentContext";
 
@@ -61,6 +62,7 @@ function AppRouter() {
         <Route path="purchases" element={<AdminPurchases />} />
         <Route path="notifications" element={<AdminNotifications />} />
         <Route path="content" element={<AdminContent />} />
+        <Route path="account" element={<AdminAccount />} />
       </Route>
     </Routes>
   );

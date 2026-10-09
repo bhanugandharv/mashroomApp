@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { Plus, Pencil, Trash2, Upload, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { api, formatErr, inr, fmtQty } from "@/lib/api";
 import { useLang } from "@/lib/i18n";
@@ -22,7 +22,22 @@ const F = ({ label, children, span }) => (
 const ProductForm = ({ initial, onSaved, onClose }) => {
   const [f, setF] = useState(initial);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef(null);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const onUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const { data } = await api.post("/admin/upload-image", fd, { headers: { "Content-Type": "multipart/form-data" } });
+      setF((prev) => ({ ...prev, image: data.url }));
+      toast.success("Photo uploaded");
+    } catch (err) { toast.error(formatErr(err)); }
+    finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
+  };
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
@@ -47,7 +62,20 @@ const ProductForm = ({ initial, onSaved, onClose }) => {
       <F label="Price (₹)"><input required type="number" min="1" step="0.01" data-testid="product-form-price" className={inputCls} value={f.price} onChange={set("price")} /></F>
       <F label="Stock (units)"><input required type="number" min="0" step="1" data-testid="product-form-stock" className={inputCls} value={f.stock} onChange={set("stock")} /></F>
       <F label="Low-stock alert at"><input type="number" min="0" data-testid="product-form-threshold" className={inputCls} value={f.low_stock_threshold} onChange={set("low_stock_threshold")} /></F>
-      <F label="Image URL"><input data-testid="product-form-image" className={inputCls} value={f.image} onChange={set("image")} placeholder="https://..." /></F>
+      <F label="Product photo" span>
+        <div className="flex items-start gap-3">
+          {f.image
+            ? <img src={f.image} alt="" className="h-16 w-16 shrink-0 rounded-lg border border-[#E5E0D8] object-cover" />
+            : <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border border-dashed border-[#E5E0D8] bg-[#FDFBF7] text-[#B9B2A6]"><ImageIcon className="h-5 w-5" /></div>}
+          <div className="flex-1 space-y-2">
+            <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" capture="environment" hidden data-testid="product-form-image-file" onChange={onUpload} />
+            <button type="button" data-testid="product-form-upload-btn" disabled={uploading} onClick={() => fileRef.current?.click()} className={btnGhost}>
+              <Upload className="h-3.5 w-3.5" />{uploading ? "Uploading..." : "Upload photo"}
+            </button>
+            <input data-testid="product-form-image" className={inputCls} value={f.image} onChange={set("image")} placeholder="or paste an image URL" />
+          </div>
+        </div>
+      </F>
       <F label="Description (English)" span><textarea data-testid="product-form-description" rows={2} className={`${inputCls} h-auto py-2`} value={f.description} onChange={set("description")} /></F>
       <F label="Description (Hindi)" span><textarea data-testid="product-form-description-hi" rows={2} className={`${inputCls} h-auto py-2`} value={f.description_hi} onChange={set("description_hi")} /></F>
       <div className="flex items-center gap-6 sm:col-span-2">

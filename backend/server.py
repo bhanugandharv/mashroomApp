@@ -12,7 +12,7 @@ from typing import List, Literal, Optional
 
 import httpx
 import razorpay
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Response, Depends, UploadFile, File
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from pymongo import ReturnDocument
@@ -23,6 +23,7 @@ from core import (db, client, hash_password, verify_password, decode_token, set_
                   create_access_token)
 from seed import seed_admin, seed_catalog, create_indexes
 import notifications as ntf
+import storage
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -55,6 +56,11 @@ class GoogleSessionIn(BaseModel):
 class ProfileIn(BaseModel):
     name: str = Field(min_length=1)
     phone: str = ""
+
+
+class ChangePasswordIn(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=6)
 
 
 class ProductIn(BaseModel):
@@ -256,6 +262,17 @@ async def update_profile(body: ProfileIn, user: dict = Depends(get_current_user)
     return await db.users.find_one({"user_id": user["user_id"]}, USER_PROJ)
 
 
+@api.post("/auth/change-password")
+async def change_password(body: ChangePasswordIn, user: dict = Depends(get_current_user)):
+    full = await db.users.find_one({"user_id": user["user_id"]})
+    if not full or not full.get("password_hash") or not verify_password(body.current_password, full["password_hash"]):
+        raise HTTPException(status_code=400, detail="Your current password is incorrect")
+    if body.current_password == body.new_password:
+        raise HTTPException(status_code=400, detail="New password must be different from your current password")
+    await db.users.update_one({"user_id": user["user_id"]}, {"$set": {"password_hash": hash_password(body.new_password)}})
+    return {"ok": True}
+
+
 # ---------- Storefront ----------
 @api.get("/")
 async def root():
@@ -403,6 +420,41 @@ async def cancel_my_order(order_id: str, user: dict = Depends(get_current_user))
         raise HTTPException(status_code=400, detail="This order can no longer be cancelled")
     await restore_order_stock(order, "Order cancelled by customer")
     return order
+
+
+# ---------- Uploads ----------
+@api.post("/admin/upload-image")
+async def upload_image(file: UploadFile = File(...), _: dict = Depends(require_admin)):
+    ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else ""
+    if ext not in storage.ALLOWED_EXT:
+        raise HTTPException(status_code=400, detail="Please upload a JPG, PNG, WebP or GIF image")
+    data = await file.read()
+    if len(data) > storage.MAX_SIZE:
+        raise HTTPException(status_code=400, detail="Image must be smaller than 5 MB")
+    path = f"{storage.APP_NAME}/products/{new_id('img')}.{ext}"
+    content_type = storage.MIME_TYPES[ext]
+    try:
+        result = await asyncio.to_thread(storage.put_object, path, data, content_type)
+    except Exception as exc:
+        logger.error("Image upload failed: %s", exc)
+        raise HTTPException(status_code=502, detail="Could not upload the image. Please try again.")
+    stored = result["path"]
+    await db.uploads.insert_one({"path": stored, "content_type": content_type, "size": len(data), "created_at": now_iso()})
+    base = os.environ.get("APP_URL", "").rstrip("/")
+    return {"url": f"{base}/api/files/{stored}", "path": stored}
+
+
+@api.get("/files/{path:path}")
+async def serve_file(path: str):
+    rec = await db.uploads.find_one({"path": path}, {"_id": 0})
+    if not rec:
+        raise HTTPException(status_code=404, detail="File not found")
+    try:
+        data, ct = await asyncio.to_thread(storage.get_object, path)
+    except Exception:
+        raise HTTPException(status_code=404, detail="File not found")
+    return Response(content=data, media_type=rec.get("content_type", ct),
+                    headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
 # ---------- Admin: products ----------
@@ -630,6 +682,11 @@ async def startup():
     await create_indexes()
     await seed_admin()
     await seed_catalog()
+    try:
+        await asyncio.to_thread(storage.init_storage)
+        logger.info("Object storage initialized")
+    except Exception as exc:
+        logger.error("Object storage init failed: %s", exc)
     asyncio.create_task(ntf.retry_pending())
 
 
