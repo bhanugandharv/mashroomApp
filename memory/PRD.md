@@ -26,11 +26,12 @@ User choices: JWT email/password + Emergent Google login (one seeded admin); Raz
 - Auth: register/login/logout/refresh, Google login, brute-force lockout, seeded admin.
 - Admin: dashboard analytics (revenue, orders, purchase cost, margin, daily chart, top products, pipeline, low stock, recent orders), orders processing (status updates, stock restore on cancel, COD paid on delivery), product CRUD, inventory (products + farm supplies, adjustments, movements log, 10s live refresh, reorder links), purchases (supplier purchases add stock, spend summary).
 - EN/HI toggle across storefront and admin nav.
+- Order notifications (2026-10-09): email via Emergent managed email (live, `EMERGENT_EMAIL_KEY`, `EMAIL_FROM_NAME`) + SMS via Twilio (queued until `TWILIO_ACCOUNT_SID/AUTH_TOKEN/FROM_NUMBER` set; auto-retried on startup and via admin "Retry pending"). Customer notified on placed/confirmed/shipped/delivered; admin alert on new order to `ADMIN_NOTIFY_EMAIL` (fallback ADMIN_EMAIL). `backend/notifications.py`, admin page `/admin/notifications` with log + channel status. Collection `notifications`.
 - Tested: 27/27 backend tests, frontend critical flows pass.
 
 ## Backlog
 - P0: Add Razorpay keys (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) to enable online payment.
-- P1: Order confirmation emails/SMS; invoice PDF; image upload for products (object storage).
+- P1: invoice PDF; image upload for products (object storage). Set ADMIN_NOTIFY_EMAIL to a real inbox; add Twilio keys for SMS.
 - P2: Coupons, customer list in admin, CSV export of sales/purchases, Razorpay webhooks.
 
 ## Next tasks

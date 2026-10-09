@@ -238,7 +238,7 @@ async def notify_order(order: dict, event: str):
     phone = to_e164(order["address"].get("phone", ""))
     if phone:
         jobs.append({**base, "channel": "sms", "to": phone, "body": sms_template(order, event)})
-    admin_email = os.environ.get("ADMIN_EMAIL", "")
+    admin_email = os.environ.get("ADMIN_NOTIFY_EMAIL") or os.environ.get("ADMIN_EMAIL", "")
     if event == "placed" and admin_email:
         s, h = admin_email_template(order)
         jobs.append({**base, "recipient": "admin", "channel": "email", "to": admin_email, "subject": s, "html": h})
