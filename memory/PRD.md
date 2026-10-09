@@ -23,6 +23,7 @@ User choices: JWT email/password + Emergent Google login (one seeded admin); Raz
 
 ## Implemented (2026-10-09 — admin account + image upload)
 - Change Password: admin page `/admin/account` (nav "Account"), `POST /api/auth/change-password` (bcrypt verifies current password, min 6 chars, blocks reuse). AdminAccount.js. Tested round-trip + restore.
+- Local-first setup (self-hosting): image uploads switched to LOCAL DISK (`backend/storage.py` → `backend/uploads/products/`, override via `UPLOAD_DIR`); no cloud storage dependency. SMS/Email now fall back to CONSOLE printing (`notifications.deliver` → status `logged`) when provider keys are absent, instead of failing. DB already local MongoDB. Added `backend/.env.example`, `frontend/.env.example`, `README.md` (+`LOCAL_SETUP.md`), and `.gitignore` keeps `*.env.example` and ignores `backend/uploads/`. No SMS OTP feature exists (SMS = order-status only).
 - Product Image Upload: `POST /api/admin/upload-image` (admin only, jpg/jpeg/png/webp/gif, ≤5MB) stores to Emergent object storage via `backend/storage.py` (EMERGENT_LLM_KEY), records in `db.uploads`; public `GET /api/files/{path}` serves bytes. ProductForm has "Upload photo" button (phone camera/gallery) + preview; URL field still works. Tested 37/37 backend + frontend 100%.
 
 

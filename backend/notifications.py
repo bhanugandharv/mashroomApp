@@ -201,6 +201,18 @@ def admin_email_template(order: dict) -> tuple:
 
 
 # ---------- Dispatch & log ----------
+def _strip_html(html: str) -> str:
+    text = re.sub(r"<[^>]+>", " ", html or "")
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _console_notice(kind: str, to: str, subject: str, body: str):
+    bar = "=" * 64
+    head = f"Subject: {subject}\n" if subject else ""
+    logger.info("\n%s\n[%s NOTIFICATION — no provider key set, printed to console]\nTo: %s\n%s%s\n%s",
+                bar, kind, to, head, body, bar)
+
+
 async def _log(doc: dict):
     doc.setdefault("notification_id", new_id("ntf"))
     doc.setdefault("created_at", now_iso())
@@ -213,18 +225,20 @@ async def deliver(doc: dict):
     try:
         if doc["channel"] == "email":
             if not email_enabled():
-                doc.update(status="queued", error="Email not configured (EMERGENT_EMAIL_KEY missing)")
+                _console_notice("EMAIL", doc["to"], doc.get("subject", ""), _strip_html(doc.get("html", "")))
+                doc.update(status="logged", error="")
             else:
                 doc.update(status="sent", provider_id=await send_email(doc["to"], doc["subject"], doc["html"]), error="")
         else:
             if not sms_enabled():
-                doc.update(status="queued", error="SMS not configured (add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER)")
+                _console_notice("SMS", doc["to"], "", doc.get("body", ""))
+                doc.update(status="logged", error="")
             else:
                 doc.update(status="sent", provider_id=await send_sms(doc["to"], doc["body"]), error="")
     except Exception as exc:
         logger.error("Notification %s failed: %s", doc.get("notification_id"), exc)
         doc.update(status="failed", error=str(exc)[:500])
-    if doc["status"] == "sent":
+    if doc["status"] in ("sent", "logged"):
         doc["sent_at"] = now_iso()
     await _log(doc)
 
