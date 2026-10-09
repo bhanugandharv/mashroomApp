@@ -31,7 +31,7 @@ const dict = {
     pay_pending: "Pending", pay_paid: "Paid", pay_failed: "Failed",
     footer_about: "A local mushroom farm from Chhattisgarh, bringing fresh harvests and grower supplies to homes and kitchens.",
     footer_shop: "Shop", footer_help: "Help", footer_contact: "Contact",
-    adm_dashboard: "Dashboard", adm_orders: "Orders", adm_products: "Products", adm_inventory: "Inventory", adm_purchases: "Purchases", adm_store: "Back to store",
+    adm_dashboard: "Dashboard", adm_orders: "Orders", adm_products: "Products", adm_inventory: "Inventory", adm_purchases: "Purchases", adm_notifications: "Notifications", adm_store: "Back to store",
   },
   hi: {
     tagline: "छत्तीसगढ़ के खेतों से ताज़ा",
@@ -63,7 +63,7 @@ const dict = {
     pay_pending: "बाकी", pay_paid: "भुगतान हुआ", pay_failed: "विफल",
     footer_about: "छत्तीसगढ़ का एक स्थानीय मशरूम फार्म, जो ताज़ा फ़सल और खेती की सामग्री घरों और रसोई तक पहुँचाता है।",
     footer_shop: "दुकान", footer_help: "सहायता", footer_contact: "संपर्क",
-    adm_dashboard: "डैशबोर्ड", adm_orders: "ऑर्डर", adm_products: "उत्पाद", adm_inventory: "इन्वेंटरी", adm_purchases: "खरीद", adm_store: "दुकान पर वापस",
+    adm_dashboard: "डैशबोर्ड", adm_orders: "ऑर्डर", adm_products: "उत्पाद", adm_inventory: "इन्वेंटरी", adm_purchases: "खरीद", adm_notifications: "सूचनाएं", adm_store: "दुकान पर वापस",
   },
 };
 

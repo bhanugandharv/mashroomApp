@@ -23,6 +23,7 @@ import AdminOrders from "@/pages/admin/AdminOrders";
 import AdminProducts from "@/pages/admin/AdminProducts";
 import AdminInventory from "@/pages/admin/AdminInventory";
 import AdminPurchases from "@/pages/admin/AdminPurchases";
+import AdminNotifications from "@/pages/admin/AdminNotifications";
 
 const StoreLayout = () => (
   <div className="flex min-h-screen flex-col">
@@ -54,6 +55,7 @@ function AppRouter() {
         <Route path="products" element={<AdminProducts />} />
         <Route path="inventory" element={<AdminInventory />} />
         <Route path="purchases" element={<AdminPurchases />} />
+        <Route path="notifications" element={<AdminNotifications />} />
       </Route>
     </Routes>
   );

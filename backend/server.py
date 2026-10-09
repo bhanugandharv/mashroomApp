@@ -22,6 +22,7 @@ from core import (db, client, hash_password, verify_password, decode_token, set_
                   get_current_user, require_admin, new_id, now, now_iso, USER_PROJ, COOKIE_OPTS, as_aware,
                   create_access_token)
 from seed import seed_admin, seed_catalog, create_indexes
+import notifications as ntf
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -329,7 +330,10 @@ async def create_order(body: OrderCreateIn, user: dict = Depends(get_current_use
     await db.orders.insert_one(order)
     for r in reserved:
         await log_movement("product", r["product_id"], r["name"], -r["quantity"], "Customer order", order["order_number"])
-    return await db.orders.find_one({"order_id": order["order_id"]}, {"_id": 0})
+    saved = await db.orders.find_one({"order_id": order["order_id"]}, {"_id": 0})
+    if body.payment_method == "cod":
+        ntf.notify_order_bg(saved, "placed")
+    return saved
 
 
 @api.post("/orders/{order_id}/razorpay/verify")
@@ -345,7 +349,9 @@ async def verify_razorpay(order_id: str, body: RazorpayVerifyIn, user: dict = De
         raise HTTPException(status_code=400, detail="Payment verification failed")
     await db.orders.update_one({"order_id": order_id}, {"$set": {
         "payment_status": "paid", "razorpay_payment_id": body.razorpay_payment_id}})
-    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    saved = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    ntf.notify_order_bg(saved, "placed")
+    return saved
 
 
 @api.get("/orders/my")
@@ -478,7 +484,27 @@ async def admin_update_order_status(order_id: str, body: StatusIn, _: dict = Dep
         "$set": update, "$push": {"status_history": {"status": body.status, "at": now_iso()}}})
     if body.status == "cancelled":
         await restore_order_stock(order, "Order cancelled by admin")
-    return await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    saved = await db.orders.find_one({"order_id": order_id}, {"_id": 0})
+    ntf.notify_order_bg(saved, body.status)
+    return saved
+
+
+# ---------- Admin: notifications ----------
+@api.get("/admin/notifications/config")
+async def admin_notifications_config(_: dict = Depends(require_admin)):
+    cfg = ntf.twilio_config()
+    return {"email_enabled": ntf.email_enabled(), "sms_enabled": cfg is not None,
+            "from_name": ntf.EMAIL_FROM_NAME, "sms_from": cfg[2] if cfg else ""}
+
+
+@api.get("/admin/notifications")
+async def admin_notifications(limit: int = 200, _: dict = Depends(require_admin)):
+    return await db.notifications.find({}, {"_id": 0, "html": 0}).sort("updated_at", -1).to_list(min(limit, 500))
+
+
+@api.post("/admin/notifications/retry")
+async def admin_notifications_retry(_: dict = Depends(require_admin)):
+    return {"retried": await ntf.retry_pending()}
 
 
 # ---------- Admin: purchases ----------
@@ -578,6 +604,7 @@ async def startup():
     await create_indexes()
     await seed_admin()
     await seed_catalog()
+    asyncio.create_task(ntf.retry_pending())
 
 
 @app.on_event("shutdown")
