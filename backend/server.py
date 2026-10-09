@@ -422,7 +422,7 @@ async def cancel_my_order(order_id: str, user: dict = Depends(get_current_user))
     return order
 
 
-# ---------- Uploads ----------
+# ---------- Uploads (local filesystem storage) ----------
 @api.post("/admin/upload-image")
 async def upload_image(file: UploadFile = File(...), _: dict = Depends(require_admin)):
     ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else ""
@@ -431,17 +431,16 @@ async def upload_image(file: UploadFile = File(...), _: dict = Depends(require_a
     data = await file.read()
     if len(data) > storage.MAX_SIZE:
         raise HTTPException(status_code=400, detail="Image must be smaller than 5 MB")
-    path = f"{storage.APP_NAME}/products/{new_id('img')}.{ext}"
+    rel_path = f"products/{new_id('img')}.{ext}"
     content_type = storage.MIME_TYPES[ext]
     try:
-        result = await asyncio.to_thread(storage.put_object, path, data, content_type)
+        await asyncio.to_thread(storage.save_file, rel_path, data)
     except Exception as exc:
         logger.error("Image upload failed: %s", exc)
         raise HTTPException(status_code=502, detail="Could not upload the image. Please try again.")
-    stored = result["path"]
-    await db.uploads.insert_one({"path": stored, "content_type": content_type, "size": len(data), "created_at": now_iso()})
+    await db.uploads.insert_one({"path": rel_path, "content_type": content_type, "size": len(data), "created_at": now_iso()})
     base = os.environ.get("APP_URL", "").rstrip("/")
-    return {"url": f"{base}/api/files/{stored}", "path": stored}
+    return {"url": f"{base}/api/files/{rel_path}", "path": rel_path}
 
 
 @api.get("/files/{path:path}")
@@ -450,10 +449,10 @@ async def serve_file(path: str):
     if not rec:
         raise HTTPException(status_code=404, detail="File not found")
     try:
-        data, ct = await asyncio.to_thread(storage.get_object, path)
+        data = await asyncio.to_thread(storage.read_file, path)
     except Exception:
         raise HTTPException(status_code=404, detail="File not found")
-    return Response(content=data, media_type=rec.get("content_type", ct),
+    return Response(content=data, media_type=rec.get("content_type", "application/octet-stream"),
                     headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
@@ -682,11 +681,7 @@ async def startup():
     await create_indexes()
     await seed_admin()
     await seed_catalog()
-    try:
-        await asyncio.to_thread(storage.init_storage)
-        logger.info("Object storage initialized")
-    except Exception as exc:
-        logger.error("Object storage init failed: %s", exc)
+    storage.ensure_dir()
     asyncio.create_task(ntf.retry_pending())
 
 
