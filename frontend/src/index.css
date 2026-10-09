@@ -1,0 +1,119 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Tiro+Devanagari+Hindi&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    margin: 0;
+    font-family: "Plus Jakarta Sans", "Noto Sans Devanagari", sans-serif;
+    background: #FDFBF7;
+    color: #1C2526;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, .font-display {
+    font-family: "Outfit", "Noto Sans Devanagari", sans-serif;
+}
+
+::selection {
+    background: #1B4D3E;
+    color: #FDFBF7;
+}
+
+@layer base {
+    :root {
+        --background: 40 50% 98%;
+        --foreground: 186 15% 13%;
+        --card: 0 0% 100%;
+        --card-foreground: 186 15% 13%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 186 15% 13%;
+        --primary: 162 48% 20%;
+        --primary-foreground: 40 50% 98%;
+        --secondary: 36 30% 93%;
+        --secondary-foreground: 186 15% 13%;
+        --muted: 36 25% 94%;
+        --muted-foreground: 190 6% 38%;
+        --accent: 25 76% 31%;
+        --accent-foreground: 40 50% 98%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 36 18% 87%;
+        --input: 36 18% 84%;
+        --ring: 162 48% 20%;
+        --chart-1: 162 48% 20%;
+        --chart-2: 25 76% 31%;
+        --chart-3: 21 57% 51%;
+        --chart-4: 43 74% 49%;
+        --chart-5: 142 71% 45%;
+        --radius: 0.75rem;
+    }
+}
+
+@layer base {
+    * {
+        @apply border-border;
+    }
+    body {
+        @apply bg-background text-foreground;
+    }
+}
+
+/* Bastar-inspired motifs: chevron/diamond strip, dotted godna texture */
+.bastar-strip {
+    height: 14px;
+    background-image: url("data:image/svg+xml,%3Csvg width='28' height='14' viewBox='0 0 28 14' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 7 L7 0 L14 7 L7 14 Z' fill='%238B4513' fill-opacity='0.55'/%3E%3Cpath d='M14 7 L21 2 L28 7 L21 12 Z' fill='none' stroke='%231B4D3E' stroke-opacity='0.55' stroke-width='1.2'/%3E%3Ccircle cx='21' cy='7' r='1.3' fill='%23DAA520'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-size: 28px 14px;
+}
+
+.bastar-strip-light {
+    height: 12px;
+    background-image: url("data:image/svg+xml,%3Csvg width='24' height='12' viewBox='0 0 24 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 12 L6 2 L12 12' fill='none' stroke='%23DAA520' stroke-opacity='0.7' stroke-width='1.3'/%3E%3Cpath d='M12 12 L18 2 L24 12' fill='none' stroke='%23C86D3B' stroke-opacity='0.7' stroke-width='1.3'/%3E%3Ccircle cx='6' cy='9' r='1' fill='%23E2ECE9'/%3E%3Ccircle cx='18' cy='9' r='1' fill='%23E2ECE9'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+}
+
+.bastar-texture {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%238B4513' fill-opacity='0.05'%3E%3Cpath d='M30 4 L38 12 L30 20 L22 12 Z'/%3E%3Ccircle cx='30' cy='12' r='1.5' fill-opacity='0.12'/%3E%3Ccircle cx='8' cy='40' r='1.4'/%3E%3Ccircle cx='14' cy='40' r='1.4'/%3E%3Ccircle cx='46' cy='40' r='1.4'/%3E%3Ccircle cx='52' cy='40' r='1.4'/%3E%3Cpath d='M22 48 L30 40 L38 48' fill='none' stroke='%231B4D3E' stroke-opacity='0.08' stroke-width='1.5'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.bastar-texture-dark {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23E2ECE9' fill-opacity='0.04'%3E%3Cpath d='M30 4 L38 12 L30 20 L22 12 Z'/%3E%3Ccircle cx='8' cy='40' r='1.4'/%3E%3Ccircle cx='52' cy='40' r='1.4'/%3E%3Cpath d='M22 48 L30 40 L38 48' fill='none' stroke='%23DAA520' stroke-opacity='0.12' stroke-width='1.5'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+.bastar-card-top {
+    position: relative;
+}
+.bastar-card-top::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background-image: radial-gradient(#8B4513 1.2px, transparent 1.3px);
+    background-size: 8px 5px;
+    opacity: 0.5;
+}
+
+.fade-up {
+    animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.live-dot {
+    animation: pulseDot 1.6s ease-in-out infinite;
+}
+@keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+[data-debug-wrapper="true"] {
+    display: contents !important;
+}
