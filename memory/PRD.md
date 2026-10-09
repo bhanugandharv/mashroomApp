@@ -22,6 +22,7 @@ User choices: JWT email/password + Emergent Google login (one seeded admin); Raz
 - Farm owner/admin managing stock, orders, supplier purchases and sales.
 
 ## Implemented (2026-10-09)
+- Site Content admin page `/admin/content` (collection `site_content`, GET `/api/content`, PUT `/api/admin/content`): EN/HI overrides for announcement banner, hero, feature cards, About the farm, footer blurb; contact details (address, phone, WhatsApp, email, Instagram, Facebook). Storefront reads via `ContentContext`, empty = default i18n text. Tested 31/31 backend + frontend.
 - Storefront: home (hero bento, featured), shop (category/search/sort), product detail (live stock), cart drawer, checkout (address, COD, Razorpay disabled until keys), order detail with tracking timeline + cancel, account (profile + orders).
 - Auth: register/login/logout/refresh, Google login, brute-force lockout, seeded admin.
 - Admin: dashboard analytics (revenue, orders, purchase cost, margin, daily chart, top products, pipeline, low stock, recent orders), orders processing (status updates, stock restore on cancel, COD paid on delivery), product CRUD, inventory (products + farm supplies, adjustments, movements log, 10s live refresh, reorder links), purchases (supplier purchases add stock, spend summary).

@@ -325,3 +325,55 @@ def test_stock_movements(admin):
     r = admin.get(f"{API}/admin/stock-movements", params={"limit": 10})
     assert r.status_code == 200
     assert isinstance(r.json(), list)
+
+
+# ---------- Site Content ----------
+def test_content_public_get_defaults():
+    r = requests.get(f"{API}/content")
+    assert r.status_code == 200
+    d = r.json()
+    for key in ["texts", "contact", "announcement_enabled", "about_enabled"]:
+        assert key in d, f"Missing {key}"
+
+
+def test_content_put_requires_admin():
+    r = requests.put(f"{API}/admin/content",
+                     json={"texts": {}, "contact": {}, "announcement_enabled": False, "about_enabled": True},
+                     headers={"Origin": ORIGIN, "Content-Type": "application/json"})
+    assert r.status_code in (401, 403)
+
+
+def test_content_put_customer_forbidden(customer):
+    r = customer.put(f"{API}/admin/content",
+                     json={"texts": {}, "contact": {}, "announcement_enabled": False, "about_enabled": True})
+    assert r.status_code == 403
+
+
+def test_content_admin_update_and_persist(admin):
+    payload = {
+        "texts": {
+            "hero_title": {"en": "Test Headline EN", "hi": "टेस्ट शीर्षक"},
+            "announcement": {"en": "Fresh harvest every Tuesday", "hi": "हर मंगलवार ताज़ा फ़सल"},
+        },
+        "contact": {
+            "phone": "9876543210", "whatsapp": "9876543210",
+            "email": "hello@example.com", "address": "Raipur farm"
+        },
+        "announcement_enabled": True,
+        "about_enabled": True,
+    }
+    r = admin.put(f"{API}/admin/content", json=payload)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["announcement_enabled"] is True
+    assert body["texts"]["hero_title"]["en"] == "Test Headline EN"
+    assert body["contact"]["phone"] == "9876543210"
+    # Public GET reflects
+    r2 = requests.get(f"{API}/content")
+    assert r2.status_code == 200
+    d = r2.json()
+    assert d["texts"]["hero_title"]["hi"] == "टेस्ट शीर्षक"
+    assert d["texts"]["announcement"]["en"] == "Fresh harvest every Tuesday"
+    assert d["contact"]["email"] == "hello@example.com"
+    assert d["announcement_enabled"] is True
+    assert d["about_enabled"] is True

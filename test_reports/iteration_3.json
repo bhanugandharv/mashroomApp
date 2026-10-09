@@ -1,0 +1,21 @@
+{
+  "summary": "End-to-end testing of new 'Site Content' feature (admin /admin/content + public /api/content). Backend: added 4 new content tests to backend_test.py; full suite = 31/31 PASSED (incl. public GET defaults, admin PUT persist with en/hi texts + contact + toggles, 401 for guest, 403 for customer). Frontend: admin login OK → sidebar admin-nav-content (2 instances: desktop+mobile) routes to /admin/content; all target testids present (content-hero_title-en/hi, content-announcement-en, content-toggle-announcement_enabled, content-toggle-about_enabled, content-contact-phone/whatsapp/email/address, content-save-btn). Filling fields + toggling + saving shows 'Website content saved' toast. Home storefront reflects overrides: announcement-bar shows 'Fresh harvest every Tuesday', home-hero H1 shows 'Test Headline EN', about-section visible, footer-phone shows '9876543210', footer-whatsapp shows 'WhatsApp 9876543210'. Hindi lang-toggle-hi switches hero to 'टेस्ट शीर्षक'. Regression: /admin/notifications renders notif-table, /admin/products renders catalogue table — both OK.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Backend get_content strips _id/key via projection and falls back to CONTENT_DEFAULT when no doc exists — clean.",
+    "admin_update_content coerces each text entry to {en,hi} strings and contact values to strings — safe against injection of nested types.",
+    "Origin guard still correctly rejects PUT without matching Origin (verified via existing test_origin_guard_rejects_other_origin).",
+    "Minor suggestion (non-blocking): consider adding max-length validation on texts/contact to prevent oversized documents."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100% (31/31)", "frontend": "100% (all required scenarios passed)"},
+  "test_credentials": "admin@cgmushroom.in / CGMadmin@2026 — verified.",
+  "seed_data_creation": "site_content doc upserted via admin PUT with Test Headline EN / टेस्ट शीर्षक, announcement 'Fresh harvest every Tuesday', contact phone/whatsapp 9876543210, email hello@example.com, address 'Raipur farm', announcement_enabled=true, about_enabled=true.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "site_content collection has a 'site' document with overrides from this run — resetting to defaults requires another admin PUT with empty texts/contact. ContentContext fetches /api/content on mount so Home/Footer/AnnouncementBar reflect updates after page reload (verified).",
+  "rca of the issue": "N/A — feature works as specified."
+}
