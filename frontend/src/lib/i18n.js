@@ -29,9 +29,10 @@ const dict = {
     order: "Order", placed_on: "Placed on", items: "Items", track: "Track order", cancel_order: "Cancel order", payment_status: "Payment",
     st_placed: "Placed", st_confirmed: "Confirmed", st_packed: "Packed", st_shipped: "Shipped", st_delivered: "Delivered", st_cancelled: "Cancelled",
     pay_pending: "Pending", pay_paid: "Paid", pay_failed: "Failed",
+    about_title: "About our farm", about_body: "CG Mushroom is a family-run mushroom farm in Chhattisgarh. We grow oyster, button and milky mushrooms in clean, climate-controlled sheds and harvest every morning so your order reaches you at peak freshness. We also supply quality spawn and guidance to new growers across the state.",
     footer_about: "A local mushroom farm from Chhattisgarh, bringing fresh harvests and grower supplies to homes and kitchens.",
     footer_shop: "Shop", footer_help: "Help", footer_contact: "Contact",
-    adm_dashboard: "Dashboard", adm_orders: "Orders", adm_products: "Products", adm_inventory: "Inventory", adm_purchases: "Purchases", adm_notifications: "Notifications", adm_store: "Back to store",
+    adm_dashboard: "Dashboard", adm_orders: "Orders", adm_products: "Products", adm_inventory: "Inventory", adm_purchases: "Purchases", adm_notifications: "Notifications", adm_content: "Site Content", adm_store: "Back to store",
   },
   hi: {
     tagline: "छत्तीसगढ़ के खेतों से ताज़ा",
@@ -61,9 +62,10 @@ const dict = {
     order: "ऑर्डर", placed_on: "ऑर्डर की तारीख", items: "सामान", track: "ऑर्डर ट्रैक करें", cancel_order: "ऑर्डर रद्द करें", payment_status: "भुगतान",
     st_placed: "ऑर्डर हुआ", st_confirmed: "पुष्टि हुई", st_packed: "पैक हुआ", st_shipped: "भेजा गया", st_delivered: "पहुँचा दिया", st_cancelled: "रद्द",
     pay_pending: "बाकी", pay_paid: "भुगतान हुआ", pay_failed: "विफल",
+    about_title: "हमारे फार्म के बारे में", about_body: "CG Mushroom छत्तीसगढ़ का एक पारिवारिक मशरूम फार्म है। हम साफ़, नियंत्रित वातावरण वाले शेड में ऑयस्टर, बटन और मिल्की मशरूम उगाते हैं और हर सुबह फ़सल तोड़ते हैं ताकि आपका ऑर्डर पूरी ताज़गी के साथ पहुँचे। हम नए किसानों को अच्छी गुणवत्ता का स्पॉन और मार्गदर्शन भी देते हैं।",
     footer_about: "छत्तीसगढ़ का एक स्थानीय मशरूम फार्म, जो ताज़ा फ़सल और खेती की सामग्री घरों और रसोई तक पहुँचाता है।",
     footer_shop: "दुकान", footer_help: "सहायता", footer_contact: "संपर्क",
-    adm_dashboard: "डैशबोर्ड", adm_orders: "ऑर्डर", adm_products: "उत्पाद", adm_inventory: "इन्वेंटरी", adm_purchases: "खरीद", adm_notifications: "सूचनाएं", adm_store: "दुकान पर वापस",
+    adm_dashboard: "डैशबोर्ड", adm_orders: "ऑर्डर", adm_products: "उत्पाद", adm_inventory: "इन्वेंटरी", adm_purchases: "खरीद", adm_notifications: "सूचनाएं", adm_content: "साइट सामग्री", adm_store: "दुकान पर वापस",
   },
 };
 

@@ -116,6 +116,13 @@ class SupplyIn(BaseModel):
     low_stock_threshold: float = Field(default=15, ge=0)
 
 
+class ContentIn(BaseModel):
+    texts: dict = Field(default_factory=dict)
+    contact: dict = Field(default_factory=dict)
+    announcement_enabled: bool = False
+    about_enabled: bool = True
+
+
 class PurchaseIn(BaseModel):
     supplier: str = Field(min_length=1)
     target_type: Literal["product", "supply"]
@@ -279,6 +286,25 @@ async def get_product(product_id: str):
 async def payments_config():
     return {"razorpay_enabled": razorpay_client() is not None, "razorpay_key_id": os.environ.get("RAZORPAY_KEY_ID", ""),
             "free_delivery_above": FREE_DELIVERY_ABOVE, "delivery_fee": DELIVERY_FEE}
+
+
+CONTENT_DEFAULT = {"texts": {}, "contact": {}, "announcement_enabled": False, "about_enabled": True}
+
+
+@api.get("/content")
+async def get_content():
+    doc = await db.site_content.find_one({"key": "site"}, {"_id": 0, "key": 0})
+    return doc or CONTENT_DEFAULT
+
+
+@api.put("/admin/content")
+async def admin_update_content(body: ContentIn, _: dict = Depends(require_admin)):
+    texts = {k: {"en": str(v.get("en", "")), "hi": str(v.get("hi", ""))} for k, v in body.texts.items() if isinstance(v, dict)}
+    contact = {k: str(v) for k, v in body.contact.items()}
+    doc = {"texts": texts, "contact": contact, "announcement_enabled": body.announcement_enabled,
+           "about_enabled": body.about_enabled, "updated_at": now_iso()}
+    await db.site_content.update_one({"key": "site"}, {"$set": doc}, upsert=True)
+    return doc
 
 
 # ---------- Orders ----------

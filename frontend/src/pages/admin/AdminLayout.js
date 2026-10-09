@@ -1,5 +1,5 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, Package, Boxes, Truck, Store, Bell } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Package, Boxes, Truck, Store, Bell, PenLine } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { useAuth } from "@/context/AuthContext";
 import { Logo, LangToggle } from "@/components/Navbar";
@@ -11,6 +11,7 @@ const NAV = [
   ["/admin/inventory", "adm_inventory", Boxes],
   ["/admin/purchases", "adm_purchases", Truck],
   ["/admin/notifications", "adm_notifications", Bell],
+  ["/admin/content", "adm_content", PenLine],
 ];
 
 const itemCls = ({ isActive }) =>

@@ -24,9 +24,13 @@ import AdminProducts from "@/pages/admin/AdminProducts";
 import AdminInventory from "@/pages/admin/AdminInventory";
 import AdminPurchases from "@/pages/admin/AdminPurchases";
 import AdminNotifications from "@/pages/admin/AdminNotifications";
+import AdminContent from "@/pages/admin/AdminContent";
+import AnnouncementBar from "@/components/AnnouncementBar";
+import { ContentProvider } from "@/context/ContentContext";
 
 const StoreLayout = () => (
   <div className="flex min-h-screen flex-col">
+    <AnnouncementBar />
     <Navbar />
     <main className="flex-1"><Outlet /></main>
     <Footer />
@@ -56,6 +60,7 @@ function AppRouter() {
         <Route path="inventory" element={<AdminInventory />} />
         <Route path="purchases" element={<AdminPurchases />} />
         <Route path="notifications" element={<AdminNotifications />} />
+        <Route path="content" element={<AdminContent />} />
       </Route>
     </Routes>
   );
@@ -67,10 +72,12 @@ export default function App() {
       <LangProvider>
         <AuthProvider>
           <CartProvider>
-            <BrowserRouter>
-              <AppRouter />
-              <Toaster position="top-center" richColors />
-            </BrowserRouter>
+            <ContentProvider>
+              <BrowserRouter>
+                <AppRouter />
+                <Toaster position="top-center" richColors />
+              </BrowserRouter>
+            </ContentProvider>
           </CartProvider>
         </AuthProvider>
       </LangProvider>
