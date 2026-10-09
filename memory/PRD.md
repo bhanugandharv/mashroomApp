@@ -21,6 +21,11 @@ User choices: JWT email/password + Emergent Google login (one seeded admin); Raz
 - Customer in Chhattisgarh buying fresh/dried mushrooms or spawn.
 - Farm owner/admin managing stock, orders, supplier purchases and sales.
 
+## Implemented (2026-10-09 — admin account + image upload)
+- Change Password: admin page `/admin/account` (nav "Account"), `POST /api/auth/change-password` (bcrypt verifies current password, min 6 chars, blocks reuse). AdminAccount.js. Tested round-trip + restore.
+- Product Image Upload: `POST /api/admin/upload-image` (admin only, jpg/jpeg/png/webp/gif, ≤5MB) stores to Emergent object storage via `backend/storage.py` (EMERGENT_LLM_KEY), records in `db.uploads`; public `GET /api/files/{path}` serves bytes. ProductForm has "Upload photo" button (phone camera/gallery) + preview; URL field still works. Tested 37/37 backend + frontend 100%.
+
+
 ## Implemented (2026-10-09)
 - Site Content admin page `/admin/content` (collection `site_content`, GET `/api/content`, PUT `/api/admin/content`): EN/HI overrides for announcement banner, hero, feature cards, About the farm, footer blurb; contact details (address, phone, WhatsApp, email, Instagram, Facebook). Storefront reads via `ContentContext`, empty = default i18n text. Tested 31/31 backend + frontend.
 - Storefront: home (hero bento, featured), shop (category/search/sort), product detail (live stock), cart drawer, checkout (address, COD, Razorpay disabled until keys), order detail with tracking timeline + cancel, account (profile + orders).

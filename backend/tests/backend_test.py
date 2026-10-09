@@ -377,3 +377,78 @@ def test_content_admin_update_and_persist(admin):
     assert d["contact"]["email"] == "hello@example.com"
     assert d["announcement_enabled"] is True
     assert d["about_enabled"] is True
+
+
+# ---------- Change password + image upload (new features) ----------
+def test_change_password_wrong_current(admin):
+    r = admin.post(f"{API}/auth/change-password",
+                   json={"current_password": "WRONG_PASS", "new_password": "whatever123"})
+    assert r.status_code == 400
+    assert "incorrect" in r.json()["detail"].lower()
+
+
+def test_change_password_min_length(admin):
+    r = admin.post(f"{API}/auth/change-password",
+                   json={"current_password": ADMIN_PASSWORD, "new_password": "abc"})
+    assert r.status_code == 422  # pydantic min_length=6
+
+
+def test_change_password_roundtrip(admin):
+    """Flip password to a temp, verify login, flip back. Restores seed credential."""
+    tmp = "TempPass@999"
+    r = admin.post(f"{API}/auth/change-password",
+                   json={"current_password": ADMIN_PASSWORD, "new_password": tmp})
+    assert r.status_code == 200, r.text
+    # Verify login with the new password
+    s2 = _session()
+    r2 = s2.post(f"{API}/auth/login", json={"email": ADMIN_EMAIL, "password": tmp})
+    assert r2.status_code == 200, r2.text
+    # Flip back using the authenticated session (admin cookies refreshed after change)
+    r3 = admin.post(f"{API}/auth/change-password",
+                    json={"current_password": tmp, "new_password": ADMIN_PASSWORD})
+    assert r3.status_code == 200, r3.text
+    # Verify original password works again
+    s3 = _session()
+    r4 = s3.post(f"{API}/auth/login", json={"email": ADMIN_EMAIL, "password": ADMIN_PASSWORD})
+    assert r4.status_code == 200, r4.text
+
+
+# 1x1 transparent PNG
+_PNG_1X1 = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+    b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\xf8\xcf"
+    b"\xc0\x00\x00\x00\x03\x00\x01\x5b\x7a\x8c\x1f\x00\x00\x00\x00IEND\xaeB`\x82"
+)
+
+
+def test_upload_image_requires_admin():
+    r = requests.post(f"{API}/admin/upload-image",
+                      files={"file": ("x.png", _PNG_1X1, "image/png")},
+                      headers={"Origin": ORIGIN})
+    assert r.status_code in (401, 403)
+
+
+def test_upload_image_rejects_bad_ext(admin):
+    r = admin.post(f"{API}/admin/upload-image",
+                   files={"file": ("x.txt", b"hello", "text/plain")},
+                   headers={"Content-Type": None, "Origin": ORIGIN})
+    # requests will set a proper multipart Content-Type automatically when headers.Content-Type stripped
+    assert r.status_code == 400
+
+
+def test_upload_image_success_and_fetch(admin):
+    # Need to drop the json Content-Type for multipart
+    headers = {k: v for k, v in admin.headers.items() if k.lower() != "content-type"}
+    r = requests.post(f"{API}/admin/upload-image",
+                     files={"file": ("tiny.png", _PNG_1X1, "image/png")},
+                     cookies=admin.cookies, headers=headers)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["url"].startswith("http") and "/api/files/" in body["url"]
+    assert body["path"].startswith("cgmushroom/products/")
+    # Fetch the file back
+    g = requests.get(body["url"], headers={"Origin": ORIGIN})
+    assert g.status_code == 200
+    assert g.headers["content-type"] == "image/png"
+    assert g.content == _PNG_1X1
+

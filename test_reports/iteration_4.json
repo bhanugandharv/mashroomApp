@@ -1,0 +1,28 @@
+{
+  "summary": "Tested two new admin features: Change Password (/admin/account) and Product Image Upload (/admin/products). Backend: added 6 new pytest cases to backend_test.py covering /api/auth/change-password (wrong current -> 400, min_length -> 422, full round-trip restore) and /api/admin/upload-image (401 for guest, bad ext -> 400, success + GET /api/files/{path} returns 200 with correct bytes/content-type). Full suite now 37/37 PASSED. Frontend: admin login OK; sidebar admin-nav-account routes to /admin/account; change-password-form visible with all three testid fields and submit. Validation: wrong current -> red toast 'Your current password is incorrect'; mismatch -> client-side toast 'New passwords do not match'. Happy path: CGMadmin@2026 -> TempPass@999 -> success toast, API-logout + re-login with TempPass@999 verified (/api/auth/me = 200). Password then restored to CGMadmin@2026 and re-login with seed credential verified (me = 200). Product upload: Add product dialog shows product-form with product-form-upload-btn + hidden product-form-image-file + product-form-image URL field; set_input_files uploads a 1x1 PNG -> toast 'Photo uploaded', product-form-image auto-populated with https://.../api/files/cgmushroom/products/img_*.png (fetch returned 200 image/png). Saved product with name/unit/price/stock appears in admin-products-table with the uploaded image rendering. Regression: editing an existing seeded product (Fresh Oyster Mushroom) with a pasted https URL still saves successfully.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Admin sidebar (AdminLayout)", "issues": ["No logout control inside admin area — only 'Back to store' link. Admin must leave /admin and use the storefront navbar's nav-logout-btn to sign out. Consider adding an admin-sidebar logout button for better UX."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "change_password endpoint correctly re-reads full user doc (bcrypt hash) and re-hashes with hash_password; also blocks reusing the same password.",
+    "ChangePasswordIn enforces min_length=6 on new_password at Pydantic level (422), while business error 'incorrect current' returns 400 — consistent and tested.",
+    "upload_image uses require_admin + extension/mime whitelist + 5MB size cap; stores by random id under cgmushroom/products/{img_*.ext}, persists {path,content_type,size} in db.uploads; GET /api/files/{path:path} validates existence via db.uploads before fetching from object storage — good defense-in-depth.",
+    "APP_URL is used to build absolute upload URL; ensure APP_URL env matches REACT_APP_BACKEND_URL in all environments (currently returns a different preview host than frontend origin but still routable via /api/files which is handled by k8s ingress — verified 200).",
+    "Minor: /api/admin/upload-image reads entire file into memory before size check (len(data) > MAX_SIZE). For a 5MB limit this is fine, but for larger limits streaming / Content-Length pre-check would be safer against memory exhaustion.",
+    "Minor UX: no admin-sidebar logout button; main agent may add one with data-testid for completeness."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py"],
+  "success_rate": {"backend": "100% (37/37)", "frontend": "100% (all required scenarios passed)"},
+  "test_credentials": "admin@cgmushroom.in / CGMadmin@2026 — verified before AND after test run (restored).",
+  "seed_data_creation": "Transient: a TEST_UP_<ts> product was created via upload flow and then deleted at the end. Regression edit saved the Fresh Oyster Mushroom product with image URL replaced by an unsplash URL (https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=300). Original seeded image URL for Fresh Oyster was overwritten — main agent may want to re-run seed_catalog or ignore (image field is cosmetic). All other seed data untouched.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Admin password is back to CGMadmin@2026. The hidden file input [data-testid=product-form-image-file] requires state='attached' (not 'visible') in Playwright — otherwise it times out. Admin area has NO logout button; use navbar nav-logout-btn (only visible outside /admin) OR call /api/auth/logout via fetch. Fresh Oyster Mushroom product's image URL was changed to an unsplash URL during regression — not a bug, just a note."
+}
